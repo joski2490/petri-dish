@@ -1,12 +1,57 @@
 
-// --- Getters
+class Bacteria {
 
-function get_x(bacteria){
-	return bacteria[0];
+	constructor(centerX, centerY){
+		this.centerX = centerX;
+		this.centerY = centerY;
+		this.radius = this.assignRadius();
+		
+		this.direction = null;
+		this.moveCounter = 0;
+
+		this.color = "#FF00FF";
+	}
+
+	assignRadius(){
+
+		let maxBoundX, maxBoundY;
+		if (canvas.width - this.centerX > this.centerX) {
+			maxBoundX = this.centerX;
+		}
+		else {
+			maxBoundX = canvas.width - this.centerX;
+		}
+
+		if (canvas.height - this.centerY > this.centerY) {
+			maxBoundY = this.centerY;
+		}
+		else {
+			maxBoundY = canvas.height - this.centerY;
+		}
+
+		const maxBound = Math.min(maxBoundX, maxBoundY);
+
+		let minBound = 0;
+		if (maxBound < 10){
+			return; // ... too small
+		}
+		else {
+			minBound = 10;
+		}
+
+		return getRandomBetween(minBound, maxBound);
+
+	}
 }
 
-function get_y(bacteria){
-	return bacteria[1];
+// --- Getters
+
+function getX(bacteria){
+	return bacteria.centerX;
+}
+
+function getY(bacteria){
+	return bacteria.centerY;
 }
 
 function getMouse(e){
@@ -16,6 +61,16 @@ function getMouse(e){
 
     return [x, y];
 }
+
+
+function getRandomBetween(a, b){
+	
+	const diff = b - a + 1;
+	let res = Math.floor(Math.random() * diff);
+	res += a;
+	return res;
+}
+
 
 //
 
@@ -39,8 +94,13 @@ function clearCircle(x, y, r){
 
 // --- Button funtions
 
+function startGame(){
+	canvas.removeEventListener("click", spawnBacteria);
+	canvas.addEventListener("click", killBacteria);
+}
+
 function reset(){
-	eraseCanvas;
+	eraseCanvas();
 	bacterias = [];
 }
 
@@ -55,18 +115,16 @@ function stopPlay(){
 // --- Drawing
 
 function drawLine(x, y, x2, y2){
-	context.save();
     context.beginPath();
 	context.moveTo(x, y);
 	context.lineTo(x2, y2);
 	context.stroke();
-	context.restore();
 }
 
 
-function drawCircle(x, y, r){
+function drawCircle(x, y, r, color){
 
-	context.fillStyle = "#000000";
+	context.fillStyle = color;
 	context.beginPath();
 	context.arc(x, y, r, 0, 2 * Math.PI);
 	context.fill();
@@ -77,10 +135,10 @@ function drawCircle(x, y, r){
 
 function drawWeb(){
 
-	for (i = 0; i < bacterias.length; i += 1){
-		for (j = 0; j < bacterias.length; j += 1){
-			drawLine(get_x(bacterias[i]), get_y(bacterias[i]),
-				     get_x(bacterias[j]), get_y(bacterias[j])
+	for (i = 0; i < bacterias.length; i++){
+		for (j = 0; j < bacterias.length; j++){
+			drawLine(getX(bacterias[i]), getY(bacterias[i]),
+				     getX(bacterias[j]), getY(bacterias[j])
 				    );
 		}
 	}
@@ -94,51 +152,68 @@ function drawBacterias(e){
 		return;
 	}
 
-	eraseCanvas();
+	//eraseCanvas();
 
-	for (i = 0; i < bacterias.length; i += 1){
+	for (i = 0; i < bacterias.length; i++){
 
-		let bacteria = bacterias[i];
-		const new_coords = moveBacteria(bacteria[0], bacteria[1]);
-		bacterias[i] = new_coords;
+		moveBacteria(bacterias[i]);
 
 	}
 
-	drawWeb();
+	//drawWeb();
 
 }
 
 
-function moveBacteria(center_x, center_y){
+function assignDirection(bacteria){
+	bacteria.direction = directions[Math.floor(Math.random() * 6)];
+	bacteria.moveCounter = Math.floor(Math.random() * 50);
+}
 
- 	let dx = 0;
- 	let dy = 0;
 
- 	const pressed = keys[Math.floor(Math.random() * 4)];
+function checkBounds(bacteria, dx, dy){
 
-    if (pressed == 37) {
-      dx -= moveSize;
-    }
+	if (bacteria.centerX + dx - bacteria.radius < 0){
+		return false;
+	}
 
-    if (pressed == 39) {
-      dx += moveSize;
-    }
- 
-    if (pressed == 38) {
-      dy -= moveSize;
-    }
- 
-    if (pressed == 40) {
-      dy += moveSize;
-    }
- 
-	clearCircle(center_x, center_y, bacteriaRadius);
+	if (bacteria.centerX + dx + bacteria.radius > canvas.width){
+		return false;
+	}
 
-    drawCircle(center_x + dx, center_y + dy, bacteriaRadius)
-	center_x += dx;
-	center_y += dy;
+	if (bacteria.centerY + dy - bacteria.radius < 0){
+		return false;
+	}
 
-	return [center_x, center_y];
+	if (bacteria.centerY + dy + bacteria.radius > canvas.height){
+		return false;
+	}
+
+	return true;
+}
+
+
+function moveBacteria(bacteria){
+
+	if (bacteria.moveCounter == 0){
+		assignDirection(bacteria);
+	}
+
+	let dx = bacteria.direction[0] * moveSize;
+	let dy = bacteria.direction[1] * moveSize;
+
+	if (!checkBounds(bacteria, dx, dy)){
+		assignDirection(bacteria);
+		dx = 0;
+		dy = 0;
+	}
+
+	clearCircle(bacteria.centerX, bacteria.centerY, bacteria.radius);
+    drawCircle(bacteria.centerX + dx, bacteria.centerY + dy, bacteria.radius, bacteria.color);
+	bacteria.centerX += dx;
+	bacteria.centerY += dy;
+
+	bacteria.moveCounter -= 1;
 
 }
 
@@ -150,11 +225,50 @@ function spawnBacteria(e){
 	const cursorX = coords[0];
 	const cursorY = coords[1];
 
-    drawCircle(cursorX, cursorY, bacteriaRadius);
-    bacterias.push([cursorX, cursorY]);
+    bacterias.push(new Bacteria(cursorX, cursorY));
 
 }
 
+function isOnBacteria(bacteria, x, y){
+
+	if ( (Math.abs(bacteria.centerX - x) <= bacteria.radius) &&
+		 (Math.abs(bacteria.centerY - y) <= bacteria.radius) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+function killBacteria(e){
+
+	const coords = getMouse(e);
+	const cursorX = coords[0];
+	const cursorY = coords[1];
+
+	for (i = 0; i < bacterias.length; i++){
+		
+		if (isOnBacteria(bacterias[i], cursorX, cursorY)){
+			clearCircle(bacterias[i].centerX, bacterias[i].centerY, bacterias[i].radius);
+			bacterias.splice(i, 1);
+		}
+	}
+
+}
+
+
+const directions = [
+					[1, 1],
+					[1, 0],
+					[0, 1],
+					[-1, -1],
+					[-1, 0],
+					[0, -1],
+				   ];
+
+let bacterias = [];
+
+let isPause = false;
 
 let canvas = document.querySelector("canvas");
 canvas.height = 700;
@@ -162,17 +276,12 @@ canvas.width = 700;
 
 let context = canvas.getContext("2d");
 
-const moveSize = 5;
-const bacteriaRadius = 20;
-const refreshRate = 20;
-
-const keys = [37, 38, 39, 40];
-let bacterias = [];
-
-let isPause = false;
+const moveSize = 3;
+const refreshRate = 17;
 
 canvas.addEventListener("click", spawnBacteria);
 document.querySelector("#pause_button").addEventListener("click", stopPlay);
 document.querySelector("#reset_button").addEventListener("click", reset);
+document.querySelector("#start_button").addEventListener("click", startGame);
 
 let intervalId = setInterval(drawBacterias, refreshRate);
