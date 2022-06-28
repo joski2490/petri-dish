@@ -14,22 +14,10 @@ class Bacteria {
 
 	assignRadius(){
 
-		let maxBoundX, maxBoundY;
-		if (canvas.width - this.centerX > this.centerX) {
-			maxBoundX = this.centerX;
-		}
-		else {
-			maxBoundX = canvas.width - this.centerX;
-		}
+		let maxBoundX = Math.min(canvas.width - this.centerX, this.centerX);
+		let maxBoundY = Math.min(canvas.height - this.centerY, this.centerY);
 
-		if (canvas.height - this.centerY > this.centerY) {
-			maxBoundY = this.centerY;
-		}
-		else {
-			maxBoundY = canvas.height - this.centerY;
-		}
-
-		const maxBound = Math.min(maxBoundX, maxBoundY);
+		let maxBound = Math.min(maxBoundX, maxBoundY);
 
 		let minBound = 0;
 		if (maxBound < 10){
@@ -39,10 +27,20 @@ class Bacteria {
 			minBound = 10;
 		}
 
+		if (maxBound > 50){
+			maxBound = 50;
+		}
+
 		return getRandomBetween(minBound, maxBound);
 
 	}
 }
+
+
+function showStatus(text){
+	document.querySelector("#status_bar").textContent = text;
+}
+
 
 // --- Getters
 
@@ -90,6 +88,9 @@ function clearCircle(x, y, r){
     context.restore();
 }
 
+function clearStatus(){
+	document.querySelector("#status_bar").textContent = "";
+}
 // ---
 
 // --- Button funtions
@@ -166,8 +167,8 @@ function drawBacterias(e){
 
 
 function assignDirection(bacteria){
-	bacteria.direction = directions[Math.floor(Math.random() * 6)];
-	bacteria.moveCounter = Math.floor(Math.random() * 50);
+	bacteria.direction = directions[getRandomBetween(0, 5)];
+	bacteria.moveCounter = getRandomBetween(0, 50);
 }
 
 
@@ -227,6 +228,8 @@ function spawnBacteria(e){
 
     bacterias.push(new Bacteria(cursorX, cursorY));
 
+    showStatus("Bacteria spawned successfully!");
+
 }
 
 function isOnBacteria(bacteria, x, y){
@@ -272,7 +275,7 @@ let isPause = false;
 
 let canvas = document.querySelector("canvas");
 canvas.height = 700;
-canvas.width = 700;
+canvas.width = 900;
 
 let context = canvas.getContext("2d");
 
