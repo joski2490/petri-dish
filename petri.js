@@ -95,11 +95,6 @@ function clearStatus(){
 
 // --- Button funtions
 
-function startGame(){
-	canvas.removeEventListener("click", spawnBacteria);
-	canvas.addEventListener("click", killBacteria);
-}
-
 function reset(){
 	eraseCanvas();
 	bacterias = [];
@@ -232,6 +227,7 @@ function spawnBacteria(e){
 
 }
 
+
 function isOnBacteria(bacteria, x, y){
 
 	if ( (Math.abs(bacteria.centerX - x) <= bacteria.radius) &&
@@ -242,6 +238,7 @@ function isOnBacteria(bacteria, x, y){
 
 	return false;
 }
+
 
 function killBacteria(e){
 
@@ -260,6 +257,92 @@ function killBacteria(e){
 }
 
 
+function startEvent(e){
+
+	const picked = document.querySelector('input[name="to-draw"]:checked');
+
+	if (picked == null){
+		showStatus("Pick something to draw!");
+		return;
+	}
+
+	if (picked.value == "poison") {
+		startSprinkle(e, "poison");
+	}
+	else if (picked.value == "food"){
+		startSprinkle(e, "food");
+	}
+	else if (picked.value == "bacteria") {
+		spawnBacteria(e);
+	}
+
+}
+
+
+function stopEvent(e){
+
+	const picked = document.querySelector('input[name="to-draw"]:checked');
+
+	if (picked == null){
+		return;
+	}
+
+	if (picked.value == "poison"){
+		stopSprinkle(e, "poison");
+	}
+	else if (picked.value == "food"){
+		stopSprinkle(e, "food");
+	}
+}
+
+
+function startSprinkle(e, type){
+
+	if (type == "food"){
+		canvas.addEventListener("mousemove", setFood);
+	}
+	else if (type == "poison"){
+		canvas.addEventListener("mousemove", setPoison);
+	}
+	
+}
+
+
+function stopSprinkle(e, type){
+
+	if (type == "food"){
+		canvas.removeEventListener("mousemove", setFood);
+	}
+	else if (type == "poison"){
+		canvas.removeEventListener("mousemove", setPoison);
+	}
+	
+}
+
+
+function setPoison(e){
+
+	const coords = getMouse(e);
+	const x = coords[0];
+	const y = coords[1];
+
+	drawCircle(x, y, poisonRadius, poisonColor);
+	showStatus("Poison set successfully!");
+
+}
+
+function setFood(e){
+
+	const coords = getMouse(e);
+	const x = coords[0];
+	const y = coords[1];
+
+	drawCircle(x, y, poisonRadius, foodColor);
+	showStatus("Food set successfully!");
+
+}
+
+
 const directions = [
 					[1, 1],
 					[1, 0],
@@ -272,6 +355,7 @@ const directions = [
 let bacterias = [];
 
 let isPause = false;
+let poisonTimerId = -1;
 
 let canvas = document.querySelector("canvas");
 canvas.height = 700;
@@ -282,9 +366,15 @@ let context = canvas.getContext("2d");
 const moveSize = 3;
 const refreshRate = 17;
 
-canvas.addEventListener("click", spawnBacteria);
+const poisonRadius = 3;
+
+const poisonColor = "#00FF00";
+const foodColor = "#b5884e";
+
+canvas.addEventListener("mousedown", startEvent);
+canvas.addEventListener("mouseup", stopEvent);
+
 document.querySelector("#pause_button").addEventListener("click", stopPlay);
 document.querySelector("#reset_button").addEventListener("click", reset);
-document.querySelector("#start_button").addEventListener("click", startGame);
 
 let intervalId = setInterval(drawBacterias, refreshRate);

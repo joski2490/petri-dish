@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>Bacterias everywhere</title>
+		<link rel="stylesheet" type="text/css" href="petri.css">
+
+	</head>
+
+	<body>
+		
+		<aside>
+
+			<nav>
+				<legend>Pick one to spawn:</legend>
+				<section class = "options">
+					<input name = "to-draw" type="radio" id="poison" value="poison">
+					<label for = "poison">Poison</label>
+					<input name = "to-draw" type="radio" id="bacteria" value="bacteria">
+					<label for = "bacteria">Bacteria</label>
+					<input name = "to-draw" type="radio" id="food" value="food">
+					<label for = "food">Food</label>
+				</section>
+			</nav>
+
+			<br>
+
+			<button id="pause_button" class="buttons">Pause</button>
+			<button id="reset_button" class="buttons">Reset</button>
+
+			<p id="status_bar">----------------------------</p>
+
+		</aside>
+
+		<main>
+			<canvas></canvas>
+		</main>
+
+		<script src="petri.js"></script>
+
+	</body>
+</html>
