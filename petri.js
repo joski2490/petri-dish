@@ -9,7 +9,10 @@ class Bacteria {
 		this.direction = null;
 		this.moveCounter = 0;
 
-		this.color = "#FF00FF";
+		this.color = bacteriaColor;
+		this.outline = bacteriaOutline;
+
+		this.absorbedPoison = 0;
 	}
 
 	assignRadius(){
@@ -41,6 +44,9 @@ function showStatus(text){
 	document.querySelector("#status_bar").textContent = text;
 }
 
+function removeFromArray(array, index){
+	array.splice(index, 1);
+}
 
 // --- Getters
 
@@ -53,9 +59,9 @@ function getY(bacteria){
 }
 
 function getMouse(e){
-	const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+	const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     return [x, y];
 }
@@ -75,7 +81,7 @@ function getRandomBetween(a, b){
 // --- Clearing funtions
 
 function eraseCanvas(){
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	drawRect(0, 0, canvas.width, canvas.height, bgColor);
 }
 
 
@@ -118,16 +124,25 @@ function drawLine(x, y, x2, y2){
 }
 
 
-function drawCircle(x, y, r, color){
+function drawCircle(x, y, r, color, outline){
 
 	context.fillStyle = color;
 	context.beginPath();
 	context.arc(x, y, r, 0, 2 * Math.PI);
 	context.fill();
+	context.strokeStyle = outline;
 	context.stroke();
 
 }
 
+
+function drawRect(x, y, w, h, color){
+
+	context.fillStyle = color;
+	context.beginPath();
+	context.fillRect(x, y, w, h);
+	context.stroke();
+}
 
 function drawWeb(){
 
@@ -140,6 +155,22 @@ function drawWeb(){
 	}
 }
 
+
+function checkPoison(bacteria){
+
+	for (i = 0; i < poisonDrops.length; i++){
+
+		let drop = poisonDrops[i];
+
+		if (isOnBacteria(bacteria, drop[0], drop[1])) {
+
+			removeFromArray(poisonDrops, i);
+			drawCircle(drop[0], drop[1], poisonRadius + 1, bgColor, bgColor);
+			bacteria.absorbedPoison++;
+
+		}
+	}
+}
 
 
 function drawBacterias(e){
@@ -204,10 +235,12 @@ function moveBacteria(bacteria){
 		dy = 0;
 	}
 
-	clearCircle(bacteria.centerX, bacteria.centerY, bacteria.radius);
-    drawCircle(bacteria.centerX + dx, bacteria.centerY + dy, bacteria.radius, bacteria.color);
+	drawCircle(bacteria.centerX, bacteria.centerY, bacteria.radius + 1, bgColor, bgColor);
+    drawCircle(bacteria.centerX + dx, bacteria.centerY + dy, bacteria.radius, bacteria.color, bacteria.outline);
 	bacteria.centerX += dx;
 	bacteria.centerY += dy;
+
+	setTimeout(checkPoison, 1, bacteria);
 
 	bacteria.moveCounter -= 1;
 
@@ -237,23 +270,6 @@ function isOnBacteria(bacteria, x, y){
 	}
 
 	return false;
-}
-
-
-function killBacteria(e){
-
-	const coords = getMouse(e);
-	const cursorX = coords[0];
-	const cursorY = coords[1];
-
-	for (i = 0; i < bacterias.length; i++){
-		
-		if (isOnBacteria(bacterias[i], cursorX, cursorY)){
-			clearCircle(bacterias[i].centerX, bacterias[i].centerY, bacterias[i].radius);
-			bacterias.splice(i, 1);
-		}
-	}
-
 }
 
 
@@ -326,7 +342,9 @@ function setPoison(e){
 	const x = coords[0];
 	const y = coords[1];
 
-	drawCircle(x, y, poisonRadius, poisonColor);
+	drawCircle(x, y, poisonRadius, poisonColor, poisonOutline);
+	poisonDrops.push([x, y]);
+
 	showStatus("Poison set successfully!");
 
 }
@@ -337,7 +355,9 @@ function setFood(e){
 	const x = coords[0];
 	const y = coords[1];
 
-	drawCircle(x, y, poisonRadius, foodColor);
+	drawCircle(x, y, poisonRadius, foodColor, foodOutline);
+	foodDrops.push([x, y]);
+
 	showStatus("Food set successfully!");
 
 }
@@ -352,24 +372,31 @@ const directions = [
 					[0, -1],
 				   ];
 
-let bacterias = [];
+let bacterias   = [];
+let poisonDrops = [];
+let foodDrops   = [];
+
+const poisonColor     = "#00FF00";
+const poisonOutline   = "#00FFFF";
+const foodColor       = "#b5884e";
+const foodOutline     = "#b5884e";
+const bgColor         = "#000000";
+const bacteriaColor   = "#174f16";
+const bacteriaOutline = "#174f16";
 
 let isPause = false;
 let poisonTimerId = -1;
 
 let canvas = document.querySelector("canvas");
-canvas.height = 700;
 canvas.width = 900;
-
+canvas.height = 700;
 let context = canvas.getContext("2d");
+drawRect(0, 0, canvas.width, canvas.height, bgColor);
 
 const moveSize = 3;
 const refreshRate = 17;
 
 const poisonRadius = 3;
-
-const poisonColor = "#00FF00";
-const foodColor = "#b5884e";
 
 canvas.addEventListener("mousedown", startEvent);
 canvas.addEventListener("mouseup", stopEvent);

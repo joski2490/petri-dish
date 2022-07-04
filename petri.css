@@ -6,6 +6,7 @@ html, body {
     width: 100%;
     justify-content: center;
     align-items: center;
+    background-color: #414852;
 }
 
 aside {
@@ -42,6 +43,7 @@ legend {
     text-align: center;
     font-size: 20px;
     padding: 10px;
+    background-color: #878e96;
 }
 
 .buttons:hover {
