@@ -13,6 +13,7 @@ class Bacteria {
 		this.outline = bacteriaOutline;
 
 		this.absorbedPoison = 0;
+		this.absorbedFood = 0;
 	}
 
 	assignRadius(){
@@ -168,6 +169,31 @@ function checkPoison(bacteria){
 			drawCircle(drop[0], drop[1], poisonRadius + 1, bgColor, bgColor);
 			bacteria.absorbedPoison++;
 
+			if (bacteria.absorbedPoison == bacteriaDeathBound){
+				killBacteria(bacteria);
+			}
+
+		}
+	}
+}
+
+
+function checkFood(bacteria){
+
+	for (i = 0; i < foodDrops.length; i++){
+
+		let drop = foodDrops[i];
+
+		if (isOnBacteria(bacteria, drop[0], drop[1])){
+
+			removeFromArray(foodDrops, i);
+			drawCircle(drop[0], drop[1], foodRadius + 1, bgColor, bgColor);
+			bacteria.absorbedFood++;
+
+			if (bacteria.absorbedFood == bacteriaReprodBound){
+				divideBacteria(bacteria);
+			}
+
 		}
 	}
 }
@@ -241,12 +267,23 @@ function moveBacteria(bacteria){
 	bacteria.centerY += dy;
 
 	setTimeout(checkPoison, 1, bacteria);
+	setTimeout(checkFood, 1, bacteria);
 
 	bacteria.moveCounter -= 1;
 
 }
 
 // ---
+
+
+function divideBacteria(bacteria){
+
+	bacterias.push(new Bacteria(bacteria.centerX + 10, bacteria.centerY + 10));
+	bacterias.push(new Bacteria(bacteria.centerX - 10, bacteria.centerY - 10));
+	killBacteria(bacteria);
+
+}
+
 
 function spawnBacteria(e){
 
@@ -258,6 +295,14 @@ function spawnBacteria(e){
 
     showStatus("Bacteria spawned successfully!");
 
+}
+
+
+function killBacteria(bacteria){
+	drawCircle(bacteria.centerX, bacteria.centerY, bacteria.radius + 1, bgColor, bgColor);
+	removeFromArray(bacterias, bacterias.indexOf(bacteria));
+
+	showStatus("Bacteria died from poison!");
 }
 
 
@@ -355,7 +400,7 @@ function setFood(e){
 	const x = coords[0];
 	const y = coords[1];
 
-	drawCircle(x, y, poisonRadius, foodColor, foodOutline);
+	drawCircle(x, y, foodRadius, foodColor, foodOutline);
 	foodDrops.push([x, y]);
 
 	showStatus("Food set successfully!");
@@ -397,6 +442,9 @@ const moveSize = 3;
 const refreshRate = 17;
 
 const poisonRadius = 3;
+const foodRadius = 3;
+const bacteriaDeathBound = 30;
+const bacteriaReprodBound = 30;
 
 canvas.addEventListener("mousedown", startEvent);
 canvas.addEventListener("mouseup", stopEvent);
