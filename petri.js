@@ -77,7 +77,77 @@ function getRandomBetween(a, b){
 }
 
 
+function getFollowSetting(){
+
+	const poisonFollow = document.querySelector('#poison_follow');
+	const foodFollow = document.querySelector('#food_follow');
+	
+	return [poisonFollow.checked, foodFollow.checked];
+
+}
+
+
+function getEuclideanDistance(a, b){
+
+	return Math.sqrt( (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 );
+}
+
+
+function getClosestDrop(bacteria, poisonDrops, foodDrops){
+
+	let closest;
+	if (poisonDrops != null){
+		closest = poisonDrops[0];
+	}
+	if (foodDrops != null){
+		closest = foodDrops[0];
+	}
+
+	if (poisonDrops != null){
+
+		for (i = 0; i < poisonDrops.length; i++){
+
+			const drop = poisonDrops[i];
+
+			if (isCloser([bacteria.centerX, bacteria.centerY], drop, closest)){
+				closest = drop;
+			}
+
+		}
+	}
+
+	if (foodDrops != null){
+
+		for (i = 0; i < foodDrops.length; i++){
+
+			const drop = foodDrops[i];
+
+			if (isCloser([bacteria.centerX, bacteria.centerY], drop, closest)){
+				closest = drop;
+			}
+
+		}
+	}
+
+	return closest;
+
+}
+
+
 //
+
+
+function isCloser(a, b, c){
+
+	if ( getEuclideanDistance(a, b) <
+		 getEuclideanDistance(a, c) ) {
+		return true;
+	}
+
+	return false;
+
+}
+
 
 // --- Clearing funtions
 
@@ -209,7 +279,7 @@ function drawBacterias(e){
 
 	for (i = 0; i < bacterias.length; i++){
 
-		moveBacteria(bacterias[i]);
+		setTimeout(moveBacteria, 1, bacterias[i]);
 
 	}
 
@@ -219,8 +289,49 @@ function drawBacterias(e){
 
 
 function assignDirection(bacteria){
-	bacteria.direction = directions[getRandomBetween(0, 5)];
-	bacteria.moveCounter = getRandomBetween(0, 50);
+
+	const followSettings = getFollowSetting();
+	const followPoison = followSettings[0];
+	const followFood = followSettings[1];
+	
+	let closest = null;
+
+	if (followFood && followPoison){
+		closest = getClosestDrop(bacteria, poisonDrops, foodDrops);
+	}
+	else if (followFood){
+		closest = getClosestDrop(bacteria, null, foodDrops);
+	}
+	else if (followPoison){
+		closest = getClosestDrop(bacteria, poisonDrops, null);
+	}
+
+	if (closest != null){
+
+		let bestDirection = directions[0];
+		for (i = 0; i < directions.length; i++){
+
+			const currentDirection = directions[i];
+			if (isCloser( closest,
+						  [bacteria.centerX + currentDirection[0], bacteria.centerY + currentDirection[1]],
+				          [bacteria.centerX + bestDirection[0], bacteria.centerY + bestDirection[1]]
+				       )
+				){
+
+				bestDirection = currentDirection;
+			}
+		}
+
+		bacteria.direction = bestDirection;
+		bacteria.moveCounter = 1;
+
+	}
+
+	else {
+		bacteria.direction = directions[getRandomBetween(0, 5)];
+		bacteria.moveCounter = getRandomBetween(0, 50);
+	}
+
 }
 
 
@@ -302,7 +413,7 @@ function killBacteria(bacteria){
 	drawCircle(bacteria.centerX, bacteria.centerY, bacteria.radius + 1, bgColor, bgColor);
 	removeFromArray(bacterias, bacterias.indexOf(bacteria));
 
-	showStatus("Bacteria died from poison!");
+	showStatus("Bacteria died!");
 }
 
 

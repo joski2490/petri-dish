@@ -62,6 +62,10 @@ input[type=radio] {
     display: none;
 }
 
+input[type=checkbox] {
+    display: none;
+}
+
 label {
     display: flex;
     cursor: pointer;
@@ -80,5 +84,13 @@ label {
 }
 
 #food:checked ~ label[for=food] {
+    color: #996a3c;
+}
+
+#poison_follow:checked ~ label[for=poison_follow] {
+    color: #996a3c;
+}
+
+#food_follow:checked ~ label[for=food_follow] {
     color: #996a3c;
 }
